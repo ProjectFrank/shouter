@@ -1,3 +1,10 @@
+machine:
+  environment:
+    DATABASE_URL: "postgresql://localhost:5432/shouter"
+database:
+  post:
+    - createdb shouter
 test:
   override:
-    - echo "NO TESTS"
+    - lein uberjar
+    - java $JVM_OPTS -jar target/shouter-standalone.jar
