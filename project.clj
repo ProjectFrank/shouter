@@ -12,4 +12,5 @@
                  [yesql "0.4.2"]]
   :main shouter.web
   :uberjar-name "shouter-standalone.jar"
-  :profiles {:uberjar {:aot :all}})
+  :profiles {:uberjar {:aot :all}}
+  :aot [shouter.web])
