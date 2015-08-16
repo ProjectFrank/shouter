@@ -1,6 +1,7 @@
 machine:
   environment:
     DATABASE_URL: "postgresql://localhost:5432/shouter"
+    ci: true
 database:
   post:
     - createdb shouter
