@@ -13,4 +13,5 @@
   :main shouter.web
   :uberjar-name "shouter-standalone.jar"
   :profiles {:uberjar {:aot :all}}
+  :min-lein-version "2.0.0"
   :aot [shouter.web])
