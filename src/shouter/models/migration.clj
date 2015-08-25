@@ -1,6 +1,13 @@
 (ns shouter.models.migration
   (:require [clojure.java.jdbc :as sql]
-            [shouter.models.shout :as shout]))
+            [shouter.models.shout :as shout]
+            [migratus.core :as migratus]
+            [clojure.java.classpath :as cp]))
+
+(def config {:store                :database
+             :db {:connection-uri (str "jdbc:" shout/spec)}
+             ;; :migration-dir "migrations"
+             :migration-table-name "foo_bar"})
 
 (defn migrated? []
   (-> (sql/query shout/spec
@@ -10,16 +17,17 @@
       (:count)
       (pos?)))
 
+(->> (cp/classpath-directories)
+     (map #(clojure.java.io/file % "migrations"))
+     (filter #(.exists %))
+     first)
+
 (defn migrate []
-  (when (not (migrated?))
+  (migratus/migrate config)  
+  #_(when (not (migrated?))
     (print "Creating database structure...")
     (flush)
-    (sql/db-do-commands shout/spec
-                        (sql/create-table-ddl
-                         :shouts
-                         [:id :serial "PRIMARY KEY"]
-                         [:body :varchar "NOT NULL"]
-                         [:created_at :timestamp
-                          "NOT NULL" "DEFAULT CURRENT_TIMESTAMP"]))
+    #_(shout/create-shouts! shout/spec)
+    (migratus/migrate config)
     (println "done")))
 

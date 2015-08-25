@@ -2,8 +2,8 @@
   (:require [clojure.java.jdbc :as sql]
             [yesql.core :refer [defqueries]]))
 
-(defonce spec (or (System/getenv "DATABASE_URL")
-                  "postgresql://localhost:5432/shouter"))
+(def spec (or (System/getenv "DATABASE_URL")
+                  "postgresql://localhost/shouter"))
 
 (defqueries "queries.sql")
 

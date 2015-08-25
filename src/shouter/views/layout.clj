@@ -7,6 +7,7 @@
     [:meta {:charset "utf-8"}]
     [:meta {:http-equiv "X-UA-Compatible" :content "IE=edge,chrome=1"}]
     [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1"}]
+    [:meta {:name "google-signin-client_id" :content "369140593080-4mklon14gkoec4gn4jrthcuf1ad7vb31.apps.googleusercontent.com"}]
     [:title title]
     (h/include-css "/stylesheets/base.css"
                    "/stylesheets/skeleton.css"
@@ -15,7 +16,11 @@
    [:body
     [:div {:id "header"}
      [:h1 {:class "container"} "SHOUTER"]]
-    [:div {:id "content" :class "container"} body]]))
+    [:div {:id "content" :class "container"} body]
+    #_[:script {:src "https://apis.google.com/js/platform.js"
+              :async nil
+              :defer nil}]
+    [:script {:src "main.js"}]]))
 
 (defn four-oh-four []
   (common "Page Not Found"

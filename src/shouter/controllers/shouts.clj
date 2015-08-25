@@ -21,5 +21,6 @@
 
 (defroutes routes
   (GET "/" [] (index))
-  (POST "/" [shout] (create shout))
+  (POST "/" [shout] (do (println shout)
+                        (create shout)))
   (DELETE "/" [] (clear!)))

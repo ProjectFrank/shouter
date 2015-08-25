@@ -22,5 +22,8 @@
 (defn index [shouts]
   (layout/common "SHOUTER"
                  (shout-form)
+                 #_[:div {:class "g-signin2" :data-onsuccess "onSignIn"} "SIGN IN!"]
+                 [:a {:class "signin-button"
+                      :href "/google_login"} "SIGN IN!"]
                  [:div {:class "clear"}]
                  (display-shouts shouts)))
