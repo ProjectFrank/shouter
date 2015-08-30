@@ -1,7 +1,7 @@
 (ns shouter.models.queries
-  (:require [yesql.core :refer [defqueries]]))
+  (:require [yesql.core :refer [defqueries]]
+            [environ.core :refer [env]]))
 
-(def spec (or (System/getenv "DATABASE_URL")
-              "postgresql://localhost/shouter"))
+(def spec (:database-url env))
 
 (defqueries "queries.sql")
