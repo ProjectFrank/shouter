@@ -11,7 +11,7 @@
                  [hiccup "1.0.4"]
                  [yesql "0.4.2"]
                  [environ "1.0.0"]
-                 [migratus "0.8.3"]
+                 [migratus "0.8.4"]
                  [clj-http "1.1.2"]
                  [org.clojure/data.json "0.2.6"]]
   :main shouter.web
@@ -21,6 +21,9 @@
             [migratus-lein "0.1.1"]
             [lein-ring "0.9.6"]]
   :ring {:handler shouter.web/application}
-  :profiles {:uberjar {:aot :all}}
+  :profiles {:uberjar {:aot :all}
+             :dev [:project/dev :profiles/dev]
+             :project/dev {}
+             :profiles/dev {}}
   :min-lein-version "2.0.0"
   :aot [shouter.web])

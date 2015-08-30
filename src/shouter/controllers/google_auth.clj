@@ -6,15 +6,14 @@
             [clj-http.client :as client]
             [clojure.pprint :refer [pprint]]
             ring.util.codec
-            [clojure.data.json :as json]))
+            [clojure.data.json :as json]
+            [shouter.models.user :as model]))
 
-(def CLIENT_ID "369140593080-4mklon14gkoec4gn4jrthcuf1ad7vb31.apps.googleusercontent.com")
+(def CLIENT_ID (:client-id env))
 
-(def REDIRECT_URI "http://localhost:8080/oauth2callback")
+(def REDIRECT_URI (:redirect-uri env))
 
-(def login-uri "https://accounts.google.com")
-
-(def CLIENT_SECRET "7OEFgc2QGOFCe2DUhEhw8_SZ")
+(def CLIENT_SECRET (:client-secret env))
 
 (def red (str "https://accounts.google.com/o/oauth2/auth?"
               "scope=email%20profile&"
@@ -35,27 +34,29 @@
 ;; use access token to get user data
 ;; redirect user back to home page with user data
 
-(defn get-access-token [code]
+#_(defn get-access-token [code]
   "returns an access token map given an auth code"
   (let [form-params {:code code
                      :client_id CLIENT_ID
                      :client_secret CLIENT_SECRET
                      :redirect_uri REDIRECT_URI
                      :grant_type "authorization_code"}
-        encoded-form-params (into {}
-                                  (map (fn [[key val]]
-                                            [key (ring.util.codec/url-encode val)]) form-params))
         options {:accept :json
                  :form-params form-params
                  :content-type :x-www-form-urlencoded}
-        _ (pprint options)
         json-str (:body (client/post "https://www.googleapis.com/oauth2/v3/token"
-                                     options))]
-    (let [result (json/read-str json-str)]
-      (pprint result)
-      result)))
+                                     options))
+        result (json/read-str json-str)]
+    result))
 
-(defn auth-handler [request]
+(defn get-user-data [access-token]
+  (let [json-str (:body (client/get "https://www.googleapis.com/oauth2/v1/userinfo"
+                                    {:accept :json
+                                     :query-params {"access_token" access-token}}))
+        result (json/read-str json-str)]
+    result))
+
+#_(defn auth-handler [request]
   (let [params (:query-params request)]
     (if-let [error (get params "error")]
       (do (pprint error)
@@ -64,26 +65,47 @@
         (if-not code
           (redirect "/404")
           ;; get access token using auth code
-          (let [{:strs [access_token
-                        refresh_token
-                        expires_in
-                        token_type]} (get-access-token code)]
-            (pprint "something happened")
-            (pprint code)
-            ;; finally, redirect to home
-            (redirect "/")))))))
+          (let [{:strs [access_token refresh_token expires_in token_type]} (get-access-token code)
+                {:strs [given_name family_name email]} (get-user-data access_token)
+                ;; get user from db using email,
+                ;; create new one if doesn't exist
+                user (if-let [retrieved-user (model/get-user-by-email email)]
+                       retrieved-user
+                       (model/create-user! {:first-name given_name
+                                            :last-name family_name
+                                            :email email}))
+                session (assoc-in (:session request) [:user] (:uuid user))
+                response (assoc (redirect "/") :session session)]
+            ;; add user data to session
+            (println "from auth")
+            (pprint response)
+            response))))))
 
-(def wrapped-auth-handler (-> auth-handler
+#_(def wrapped-auth-handler (-> auth-handler
                               wrap-params))
 
 (defroutes routes
   (GET "/google_login" [] (redirect red))
-  (GET "/oauth2callback" request (wrapped-auth-handler request)))
+  #_(GET "/oauth2callback" request (wrapped-auth-handler request)))
 
-;; (defn handler [request]
-;;   (let [token (get (:form-params request) "idtoken")]
-;;     (println (env :client-id))
-;;     (response token)))
+(defn success-handler [{{access-token :access-token} :oauth2 :as request}]
+  (let [{:strs [given_name family_name email]} (get-user-data access-token)
+        ;; get user from db using email,
+        ;; create new one if doesn't exist
+        user (if-let [retrieved-user (model/get-user-by-email email)]
+               retrieved-user
+               (model/create-user! {:first-name given_name
+                                    :last-name family_name
+                                    :email email}))
+        session (assoc-in (:session request) [:user] (:uuid user))
+        response (assoc (redirect "/") :session session)]
+    ;; add user data to session
+    (println "from auth")
+    (pprint response)
+    response))
 
-
-
+(def oauth-config {:client-id (:client-id env)
+                   :client-secret (:client-secret env)
+                   :redirect-uri (:redirect-uri env)
+                   :token-endpoint "https://www.googleapis.com/oauth2/v3/token"
+                   :success-handler success-handler})

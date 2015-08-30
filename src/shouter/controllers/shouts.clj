@@ -7,7 +7,7 @@
             [shouter.models.migration :as migration]))
 
 (defn index []
-  (view/index (model/get-all-shouts model/spec)))
+  (view/index (model/get-all-shouts)))
 
 (defn create
   [shout]
@@ -16,7 +16,7 @@
     (ring/redirect "/")))
 
 (defn clear! []
-  (model/clear-shouts! model/spec)
+  (model/clear-shouts!)
   (ring/redirect "/"))
 
 (defroutes routes

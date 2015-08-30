@@ -11,7 +11,9 @@
             [shouter.views.layout :as layout]
             [shouter.models.migration :as schema]
             [hiccup.page :as page]
-            [clojure.pprint :refer [pprint]])
+            [clojure.pprint :refer [pprint]]
+            [shouter.middleware.oauth2 :refer [wrap-oauth2]]
+            [environ.core :refer [env]])
   (:gen-class))
 
 (defonce server (atom nil))
@@ -21,18 +23,26 @@
   shouts/routes
   (route/not-found (layout/four-oh-four)))
 
-(defn wrap-logging [handler]
-  (fn [{session :session :as request}]
+(defn wrap-count [handler]
+  (fn [{incoming-session :session :as request}]
     (let [response (handler request)
-          count (:count session 0)
-          session (assoc session :count (inc count))]
-      ;; (pprint session)
-      ;; (pprint request)
+          outgoing-session (:session response)
+          count (:count incoming-session 0)
+          session (merge incoming-session (assoc outgoing-session :count (inc count)))]
       (assoc response :session session))))
 
-(def application (-> (handler/site routes)
+(defn wrap-logging [handler]
+  (fn [request]
+    (let [response (handler request)]
+      (println "request session" (:session request))
+      (println "response session" (:session response))
+      response)))
+
+(def application (-> routes
+                     (wrap-count)
+                     (wrap-oauth2 google-auth/oauth-config)
                      (wrap-logging)
-                     (session/wrap-session)
+                     (handler/site)
                      (resource/wrap-resource "/public")
                      (content-type/wrap-content-type)))
 
@@ -48,7 +58,7 @@
     (.stop instance)
     (reset! server nil)))
 
-(defn -main []
+(defn -main [& args]
   (schema/migrate)
   (let [port (Integer. (or (System/getenv "PORT") "8080"))]
     (start port))

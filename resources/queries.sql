@@ -14,6 +14,18 @@ CREATE TABLE IF NOT EXISTS shouts
 body VARCHAR NOT NULL,
 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
 
--- name: drop-table!
--- drop the shouts table
-DROP TABLE shouts;
+-- name: add-shout!
+-- Add a shout to the shouts table
+INSERT INTO shouts (body)
+VALUES (:body);
+
+-- name: get-user
+-- Get a user from the users table with a given email address
+SELECT *
+FROM users
+WHERE email=:email;
+
+-- name: create-user!
+-- Add a user to the users table
+INSERT INTO users (uuid, first_name, last_name, email)
+VALUES (:uuid, :first_name, :last_name, :email);
