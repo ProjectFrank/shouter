@@ -10,7 +10,6 @@
             [shouter.controllers.google-auth :as google-auth]
             [shouter.views.layout :as layout]
             [shouter.models.migration :as schema]
-            [hiccup.page :as page]
             [clojure.pprint :refer [pprint]]
             [shouter.middleware.oauth2 :refer [wrap-oauth2]]
             [environ.core :refer [env]])
